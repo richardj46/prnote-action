@@ -36,9 +36,9 @@ function positiveIntegerInput(name: string, fallback: number): number {
 
 export function readConfig(): ActionConfig {
   const githubToken = core.getInput("github-token", { required: true });
-  const apiKey = core.getInput("gemini-api-key", { required: true });
+  const apiKey = core.getInput("gemini-api-key");
   core.setSecret(githubToken);
-  core.setSecret(apiKey);
+  if (apiKey) core.setSecret(apiKey);
 
   const rawExclude = core.getInput("exclude").trim();
   const exclude = (rawExclude ? rawExclude.split(",") : DEFAULT_EXCLUSIONS)

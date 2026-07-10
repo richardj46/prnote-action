@@ -30,7 +30,7 @@ jobs:
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
 ```
 
-Add `GEMINI_API_KEY` as a repository or organization Actions secret. No checkout step is required: PRNote reads PR metadata and patches through the GitHub API and never executes pull request code.
+Add `GEMINI_API_KEY` as a repository or organization Actions secret to enable AI generation. The key is optional: without it—or whenever Gemini fails—PRNote generates a deterministic title and description from commit history and changed-file metadata. No checkout step is required: PRNote reads PR metadata and patches through the GitHub API and never executes pull request code.
 
 ## Safe defaults
 
@@ -45,7 +45,7 @@ Generation and GitHub API failures are non-blocking. The action emits a warning,
 | Input                 | Default               | Description                                                                                                      |
 | --------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | `github-token`        | required              | Token used to read and update the PR.                                                                            |
-| `gemini-api-key`      | required              | Gemini API key.                                                                                                  |
+| `gemini-api-key`      | optional              | Gemini API key. When absent or unavailable, commit-history generation is used.                                   |
 | `update-title`        | `true`                | Allow title generation.                                                                                          |
 | `update-body`         | `true`                | Allow body generation.                                                                                           |
 | `overwrite-title`     | `false`               | Replace a meaningful existing title.                                                                             |
@@ -61,6 +61,10 @@ Default exclusions include lockfiles, source maps, minified JavaScript, build ou
 The action exposes `title-updated` and `body-updated` outputs.
 
 Gemini uses low thinking for this focused summarization task and does not store Interactions API objects (`store: false`). If a large pull request still times out, reduce `max-diff-characters` or increase `timeout-seconds`.
+
+### Commit-history fallback
+
+If Gemini times out, returns no model text, rejects the request, or no API key is configured, PRNote still updates eligible fields. The fallback title uses the first meaningful non-merge commit subject. The description lists unique commit subjects, exact file/change totals, testing evidence without claiming tests passed, and a truncation note when applicable.
 
 ### Overwrite example
 

@@ -1,7 +1,15 @@
 import type { GeneratedNote, GenerationContext } from "./types.js";
 
 interface GeminiInteractionResult {
+  id?: string;
+  status?: string;
   output_text?: string;
+  steps?: Array<{
+    type?: string;
+    status?: string;
+    content?: Array<{ type?: string; text?: string }>;
+  }>;
+  outputs?: Array<{ type?: string; text?: string }>;
   error?: { message?: string };
 }
 
@@ -19,8 +27,39 @@ const NOTE_SCHEMA = {
 } as const;
 
 function responseText(response: GeminiInteractionResult): string {
-  if (response.output_text) return response.output_text;
-  throw new Error("Gemini returned no text output.");
+  if (response.output_text?.trim()) return response.output_text;
+
+  const modelOutputs = (response.steps ?? []).filter(
+    (step) => step.type === "model_output",
+  );
+  const finalOutput = modelOutputs.at(-1);
+  const stepText = (finalOutput?.content ?? [])
+    .filter((content) => content.type === "text" && content.text)
+    .map((content) => content.text)
+    .join("");
+  if (stepText.trim()) return stepText;
+
+  const legacyText = (response.outputs ?? [])
+    .filter((output) => output.type === "text" && output.text)
+    .map((output) => output.text)
+    .join("");
+  if (legacyText.trim()) return legacyText;
+
+  const stepTypes = (response.steps ?? [])
+    .map((step) => step.type)
+    .filter(Boolean)
+    .join(", ");
+  const details = [
+    response.status ? `status: ${response.status}` : null,
+    response.error?.message ? `error: ${response.error.message}` : null,
+    stepTypes ? `steps: ${stepTypes}` : null,
+    response.id ? `interaction: ${response.id}` : null,
+  ]
+    .filter(Boolean)
+    .join("; ");
+  throw new Error(
+    `Gemini returned no model text${details ? ` (${details})` : ""}.`,
+  );
 }
 
 export function validateGeneratedNote(value: unknown): GeneratedNote {
@@ -78,6 +117,83 @@ Pull request context:
 ${JSON.stringify(context, null, 2)}`;
 }
 
+function commitSubject(message: string): string {
+  return (message.split("\n")[0] ?? "")
+    .trim()
+    .replace(
+      /^(?:feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\([^)]+\))?!?:\s*/i,
+      "",
+    )
+    .replace(/[.!]+$/, "")
+    .trim();
+}
+
+function conciseTitle(subject: string): string {
+  const capitalized = subject
+    ? subject.charAt(0).toUpperCase() + subject.slice(1)
+    : "Update pull request changes";
+  if (capitalized.length <= 120) return capitalized;
+  const shortened = capitalized.slice(0, 117);
+  const wordBoundary = shortened.lastIndexOf(" ");
+  return `${shortened.slice(0, wordBoundary >= 80 ? wordBoundary : 117).trimEnd()}...`;
+}
+
+export function generateFallbackNote(
+  context: GenerationContext,
+): GeneratedNote {
+  const subjects = context.commits
+    .map(commitSubject)
+    .filter((subject) => subject && !/^merge\b/i.test(subject));
+  const uniqueSubjects = subjects.filter(
+    (subject, index) =>
+      subjects.findIndex(
+        (candidate) => candidate.toLowerCase() === subject.toLowerCase(),
+      ) === index,
+  );
+  const primarySubject =
+    uniqueSubjects[0] ?? commitSubject(context.commits[0] ?? "");
+  const title = conciseTitle(primarySubject);
+  const commitCount = context.commits.length;
+  const summary = `Contains ${commitCount} commit${commitCount === 1 ? "" : "s"} affecting ${context.totals.files} file${context.totals.files === 1 ? "" : "s"} (+${context.totals.additions}/-${context.totals.deletions}).`;
+  const changes = uniqueSubjects.slice(0, 10);
+  if (uniqueSubjects.length > changes.length) {
+    changes.push(
+      `Include ${uniqueSubjects.length - changes.length} additional commit${uniqueSubjects.length - changes.length === 1 ? "" : "s"}`,
+    );
+  }
+  if (changes.length === 0) {
+    changes.push(
+      ...context.files
+        .slice(0, 10)
+        .map((file) => `${file.status} ${file.filename}`),
+    );
+  }
+
+  const hasTestingEvidence =
+    context.commits.some((commit) => /\btests?\b|\bspecs?\b/i.test(commit)) ||
+    context.files.some((file) =>
+      /(?:^|\/)(?:tests?|specs?|__tests__)(?:\/|\.)|\.(?:test|spec)\./i.test(
+        file.filename,
+      ),
+    );
+
+  return {
+    title,
+    summary,
+    changes,
+    testing: [
+      hasTestingEvidence
+        ? "Test-related changes were found, but test execution results were not available."
+        : "Testing details were not found in the commit history or changed files.",
+    ],
+    notes: context.truncated
+      ? [
+          "Diff context was truncated or excluded; this description uses available commit and file metadata.",
+        ]
+      : [],
+  };
+}
+
 export async function generateNote(
   context: GenerationContext,
   options: {
@@ -101,7 +217,7 @@ export async function generateNote(
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
       const response = await fetchImpl(
-        "https://generativelanguage.googleapis.com/v1beta/interactions",
+        "https://generativelanguage.googleapis.com/v1beta2/interactions",
         {
           method: "POST",
           headers: {
