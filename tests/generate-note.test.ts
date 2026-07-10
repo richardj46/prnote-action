@@ -105,11 +105,18 @@ describe("generateNote", () => {
     expect(result.title).toBe("Add authentication");
     const init = fetchImpl.mock.calls[0]?.[1] as RequestInit;
     const request = JSON.parse(String(init.body));
-    expect(request.text.format).toMatchObject({
-      type: "json_schema",
-      strict: true,
+    expect(request.response_format).toMatchObject({
+      type: "text",
+      mime_type: "application/json",
     });
+    expect(request.response_format.schema).toMatchObject({ type: "object" });
     expect(request.model).toBe("test-model");
+    expect(fetchImpl.mock.calls[0]?.[0]).toBe(
+      "https://generativelanguage.googleapis.com/v1beta/interactions",
+    );
+    expect((init.headers as Record<string, string>)["x-goog-api-key"]).toBe(
+      "secret",
+    );
   });
 
   it("reports provider failures without exposing the key", async () => {
