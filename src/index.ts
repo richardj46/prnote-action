@@ -5,7 +5,11 @@ import { readConfig } from "./config.js";
 import { generateFallbackNote, generateNote } from "./generate-note.js";
 import { GitHubClient } from "./github.js";
 import type { GeneratedNote, PullRequestInfo } from "./types.js";
-import { decideUpdate, eligibleFields } from "./update-pr.js";
+import {
+  decideUpdate,
+  eligibleFields,
+  renderPullRequestComment,
+} from "./update-pr.js";
 
 function eventPullRequest(): PullRequestInfo | null {
   const payload = github.context.payload;
@@ -34,17 +38,19 @@ export async function run(): Promise<void> {
       );
       core.setOutput("title-updated", false);
       core.setOutput("body-updated", false);
+      core.setOutput("comment-written", false);
       return;
     }
 
     const config = readConfig();
     const eligible = eligibleFields(pullRequest, config);
-    if (!eligible.title && !eligible.body) {
+    if (!eligible.title && !eligible.body && !config.comment) {
       core.info(
         "The pull request already contains meaningful content; no context was sent for generation.",
       );
       core.setOutput("title-updated", false);
       core.setOutput("body-updated", false);
+      core.setOutput("comment-written", false);
       return;
     }
     const client = new GitHubClient(config.githubToken);
@@ -73,28 +79,56 @@ export async function run(): Promise<void> {
       }
     }
     const decision = decideUpdate(pullRequest, note, config);
+    let titleUpdated = false;
+    let bodyUpdated = false;
     if (!decision.titleUpdated && !decision.bodyUpdated) {
-      core.info(
-        "The pull request already contains meaningful content; no changes were made.",
-      );
+      core.info("The pull request title and body were preserved.");
     } else {
       const {
         titleUpdated: _titleUpdated,
         bodyUpdated: _bodyUpdated,
         ...update
       } = decision;
-      await client.updatePullRequest(pullRequest, update);
-      core.info(
-        `Updated pull request ${[
-          decision.titleUpdated ? "title" : null,
-          decision.bodyUpdated ? "body" : null,
-        ]
-          .filter(Boolean)
-          .join(" and ")}.`,
-      );
+      try {
+        await client.updatePullRequest(pullRequest, update);
+        titleUpdated = decision.titleUpdated;
+        bodyUpdated = decision.bodyUpdated;
+        core.info(
+          `Updated pull request ${[
+            titleUpdated ? "title" : null,
+            bodyUpdated ? "body" : null,
+          ]
+            .filter(Boolean)
+            .join(" and ")}.`,
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        core.warning(
+          `PRNote could not update the pull request title or body: ${message}`,
+        );
+      }
     }
-    core.setOutput("title-updated", decision.titleUpdated);
-    core.setOutput("body-updated", decision.bodyUpdated);
+    let commentWritten = false;
+    if (config.comment) {
+      try {
+        const commentResult = await client.upsertPullRequestComment(
+          pullRequest,
+          renderPullRequestComment(note),
+        );
+        commentWritten = true;
+        core.info(
+          `${commentResult === "created" ? "Created" : "Updated"} the PRNote pull request comment.`,
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        core.warning(
+          `PRNote could not write its pull request comment: ${message}`,
+        );
+      }
+    }
+    core.setOutput("title-updated", titleUpdated);
+    core.setOutput("body-updated", bodyUpdated);
+    core.setOutput("comment-written", commentWritten);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     core.warning(
@@ -102,6 +136,7 @@ export async function run(): Promise<void> {
     );
     core.setOutput("title-updated", false);
     core.setOutput("body-updated", false);
+    core.setOutput("comment-written", false);
   }
 }
 

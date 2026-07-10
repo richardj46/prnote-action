@@ -3,6 +3,7 @@ export interface ActionConfig {
   apiKey: string;
   updateTitle: boolean;
   updateBody: boolean;
+  comment: boolean;
   overwriteTitle: boolean;
   overwriteBody: boolean;
   maxDiffCharacters: number;

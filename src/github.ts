@@ -57,4 +57,42 @@ export class GitHubClient {
       ...update,
     });
   }
+
+  async upsertPullRequestComment(
+    pullRequest: PullRequestInfo,
+    body: string,
+  ): Promise<"created" | "updated"> {
+    const comments = await this.octokit.paginate(
+      this.octokit.rest.issues.listComments,
+      {
+        owner: pullRequest.owner,
+        repo: pullRequest.repo,
+        issue_number: pullRequest.number,
+        per_page: 100,
+      },
+    );
+    const existing = comments.find(
+      (comment) =>
+        comment.user?.type === "Bot" &&
+        comment.body?.includes("<!-- prnote-action -->"),
+    );
+
+    if (existing) {
+      await this.octokit.rest.issues.updateComment({
+        owner: pullRequest.owner,
+        repo: pullRequest.repo,
+        comment_id: existing.id,
+        body,
+      });
+      return "updated";
+    }
+
+    await this.octokit.rest.issues.createComment({
+      owner: pullRequest.owner,
+      repo: pullRequest.repo,
+      issue_number: pullRequest.number,
+      body,
+    });
+    return "created";
+  }
 }

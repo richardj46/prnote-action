@@ -4,6 +4,7 @@ import {
   eligibleFields,
   isEffectivelyEmptyBody,
   isWeakTitle,
+  renderPullRequestComment,
 } from "../src/update-pr.js";
 import type { GeneratedNote, PullRequestInfo } from "../src/types.js";
 
@@ -138,5 +139,15 @@ describe("decideUpdate", () => {
         },
       ),
     ).toEqual({ title: false, body: false });
+  });
+
+  it("renders an idempotent pull request comment without merge instructions", () => {
+    const comment = renderPullRequestComment(note);
+    expect(comment).toContain("<!-- prnote-action -->");
+    expect(comment).toContain("**Suggested title:** Add authentication");
+    expect(comment).toContain("## Summary");
+    expect(comment).toContain(
+      "does not merge the pull request or modify commits",
+    );
   });
 });

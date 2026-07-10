@@ -101,6 +101,16 @@ export function eligibleFields(
   };
 }
 
+export function renderPullRequestComment(note: GeneratedNote): string {
+  return [
+    "<!-- prnote-action -->",
+    "## PRNote",
+    `**Suggested title:** ${note.title}`,
+    renderNote(note),
+    "_This is a pull request conversation comment. PRNote does not merge the pull request or modify commits._",
+  ].join("\n\n");
+}
+
 export function decideUpdate(
   pullRequest: PullRequestInfo,
   note: GeneratedNote,

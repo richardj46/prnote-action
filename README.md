@@ -36,9 +36,9 @@ Add `GEMINI_API_KEY` as a repository or organization Actions secret to enable AI
 
 By default, PRNote updates a title only when it is empty, a placeholder, or resembles the source branch. It updates a body only when it is empty or looks like an untouched template. Meaningful human-written content, screenshots, completed checklists, testing instructions, issue references, and rollout notes are preserved.
 
-When neither field is eligible for an update, PRNote stops before collecting repository context or calling Gemini.
+PRNote writes one managed summary comment in the pull request conversation by default, even when the existing title and body are preserved. Set `comment: "false"` to disable it. When commenting is disabled and neither field is eligible for an update, PRNote stops before collecting repository context or calling Gemini.
 
-Generation and GitHub API failures are non-blocking. The action emits a warning, reports both outputs as `false`, and leaves the existing PR unchanged.
+Generation and GitHub API failures are non-blocking. The action emits a warning and reports the affected output as `false`.
 
 ## Inputs
 
@@ -48,6 +48,7 @@ Generation and GitHub API failures are non-blocking. The action emits a warning,
 | `gemini-api-key`      | optional              | Gemini API key. When absent or unavailable, commit-history generation is used.                                   |
 | `update-title`        | `true`                | Allow title generation.                                                                                          |
 | `update-body`         | `true`                | Allow body generation.                                                                                           |
+| `comment`             | `true`                | Create or update one managed PR conversation comment.                                                            |
 | `overwrite-title`     | `false`               | Replace a meaningful existing title.                                                                             |
 | `overwrite-body`      | `false`               | Replace a meaningful existing body.                                                                              |
 | `max-diff-characters` | `20000`               | Maximum selected patch characters sent for generation; use `0` to send no patches.                               |
@@ -58,7 +59,36 @@ Generation and GitHub API failures are non-blocking. The action emits a warning,
 
 Default exclusions include lockfiles, source maps, minified JavaScript, build output, coverage, generated directories, `.next`, and Rust `target` output.
 
-The action exposes `title-updated` and `body-updated` outputs.
+The action exposes `title-updated`, `body-updated`, and `comment-written` outputs.
+
+The managed comment is identified by an invisible marker, so rerunning PRNote updates the existing bot comment instead of adding duplicates. PRNote uses GitHub's pull request issue-comment endpoint and does not create commit comments.
+
+### Merge commit title and description
+
+PRNote writes the generated title and description to the pull request. GitHub can then copy them into the editable merge dialog when a user merges the PR after checks pass.
+
+To guarantee that the PR fields contain PRNote's generated values rather than preserved human-written content, configure the action with explicit overwrite mode:
+
+```yaml
+- uses: your-github-name/prnote@v1
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
+    update-title: "true"
+    update-body: "true"
+    overwrite-title: "true"
+    overwrite-body: "true"
+```
+
+Configure this once in the target repository:
+
+1. Open **Settings → General → Pull Requests**.
+2. Enable **Allow merge commits**.
+3. Set the default commit message to **Pull request title and description**.
+
+After checks pass, GitHub pre-fills the merge commit title and description from the PRNote-updated PR. The user can review or edit both fields before clicking Merge. PRNote does not merge automatically and needs only `contents: read` plus `pull-requests: write` permissions.
+
+GitHub does not expose a per-pull-request API for independently setting the editable merge-dialog defaults. The supported path is: PRNote updates the PR title/body, then the repository's default commit-message setting copies those fields into the merge form.
 
 Gemini uses low thinking for this focused summarization task and does not store Interactions API objects (`store: false`). If a large pull request still times out, reduce `max-diff-characters` or increase `timeout-seconds`.
 

@@ -21,6 +21,10 @@ inputs:
     description: Whether PRNote may generate or update the pull request body.
     required: false
     default: "true"
+  comment:
+    description: Whether PRNote writes or updates a summary comment in the pull request conversation.
+    required: false
+    default: "true"
   overwrite-title:
     description: Whether PRNote may overwrite an existing meaningful title.
     required: false
@@ -55,6 +59,8 @@ outputs:
     description: Whether PRNote updated the pull request title.
   body-updated:
     description: Whether PRNote updated the pull request body.
+  comment-written:
+    description: Whether PRNote created or updated its pull request conversation comment.
 
 runs:
   using: node20
