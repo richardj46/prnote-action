@@ -6,6 +6,7 @@ export interface ActionConfig {
   overwriteTitle: boolean;
   overwriteBody: boolean;
   maxDiffCharacters: number;
+  timeoutSeconds: number;
   exclude: string[];
   language: string;
   model: string;

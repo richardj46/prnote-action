@@ -33,6 +33,10 @@ inputs:
     description: Maximum number of diff characters included in generation context.
     required: false
     default: "20000"
+  timeout-seconds:
+    description: Maximum time allowed for each Gemini request.
+    required: false
+    default: "120"
   exclude:
     description: Comma-separated glob patterns excluded from diff context.
     required: false

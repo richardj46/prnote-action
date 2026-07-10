@@ -51,6 +51,7 @@ Generation and GitHub API failures are non-blocking. The action emits a warning,
 | `overwrite-title`     | `false`               | Replace a meaningful existing title.                                                                             |
 | `overwrite-body`      | `false`               | Replace a meaningful existing body.                                                                              |
 | `max-diff-characters` | `20000`               | Maximum selected patch characters sent for generation; use `0` to send no patches.                               |
+| `timeout-seconds`     | `120`                 | Maximum duration of each Gemini attempt; transient failures are retried once.                                    |
 | `exclude`             | generated/noisy files | Comma-separated minimatch globs excluded from file and diff context. Providing this input replaces the defaults. |
 | `language`            | `en`                  | Output language or locale instruction.                                                                           |
 | `model`               | `gemini-3.5-flash`    | Gemini Interactions API model.                                                                                   |
@@ -58,6 +59,8 @@ Generation and GitHub API failures are non-blocking. The action emits a warning,
 Default exclusions include lockfiles, source maps, minified JavaScript, build output, coverage, generated directories, `.next`, and Rust `target` output.
 
 The action exposes `title-updated` and `body-updated` outputs.
+
+Gemini uses low thinking for this focused summarization task and does not store Interactions API objects (`store: false`). If a large pull request still times out, reduce `max-diff-characters` or increase `timeout-seconds`.
 
 ### Overwrite example
 

@@ -111,6 +111,8 @@ describe("generateNote", () => {
     });
     expect(request.response_format.schema).toMatchObject({ type: "object" });
     expect(request.model).toBe("test-model");
+    expect(request.generation_config).toEqual({ thinking_level: "low" });
+    expect(request.store).toBe(false);
     expect(fetchImpl.mock.calls[0]?.[0]).toBe(
       "https://generativelanguage.googleapis.com/v1beta/interactions",
     );
@@ -120,11 +122,13 @@ describe("generateNote", () => {
   });
 
   it("reports provider failures without exposing the key", async () => {
-    const fetchImpl = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ error: { message: "rate limited" } }), {
-        status: 429,
-        headers: { "Content-Type": "application/json" },
-      }),
+    const fetchImpl = vi.fn().mockImplementation(() =>
+      Promise.resolve(
+        new Response(JSON.stringify({ error: { message: "rate limited" } }), {
+          status: 429,
+          headers: { "Content-Type": "application/json" },
+        }),
+      ),
     );
     await expect(
       generateNote(context, {
@@ -132,8 +136,32 @@ describe("generateNote", () => {
         model: "test-model",
         language: "en",
         fetchImpl,
+        sleepImpl: vi.fn().mockResolvedValue(undefined),
       }),
     ).rejects.toThrow("rate limited");
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries a timeout and reports an actionable final error", async () => {
+    const timeoutError = new Error("The operation was aborted due to timeout");
+    timeoutError.name = "TimeoutError";
+    const fetchImpl = vi.fn().mockRejectedValue(timeoutError);
+    const sleepImpl = vi.fn().mockResolvedValue(undefined);
+
+    await expect(
+      generateNote(context, {
+        apiKey: "secret",
+        model: "test-model",
+        language: "en",
+        timeoutSeconds: 90,
+        fetchImpl,
+        sleepImpl,
+      }),
+    ).rejects.toThrow(
+      "timed out after 90 seconds on attempt 2 of 2. Consider reducing max-diff-characters or increasing timeout-seconds",
+    );
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    expect(sleepImpl).toHaveBeenCalledWith(1000);
   });
 
   it("rejects malformed JSON", async () => {

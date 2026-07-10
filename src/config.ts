@@ -44,6 +44,10 @@ export function readConfig(): ActionConfig {
   const exclude = (rawExclude ? rawExclude.split(",") : DEFAULT_EXCLUSIONS)
     .map((pattern) => pattern.trim())
     .filter(Boolean);
+  const timeoutSeconds = positiveIntegerInput("timeout-seconds", 120);
+  if (timeoutSeconds === 0) {
+    throw new Error("Input 'timeout-seconds' must be greater than zero.");
+  }
 
   return {
     githubToken,
@@ -53,6 +57,7 @@ export function readConfig(): ActionConfig {
     overwriteTitle: booleanInput("overwrite-title", false),
     overwriteBody: booleanInput("overwrite-body", false),
     maxDiffCharacters: positiveIntegerInput("max-diff-characters", 20_000),
+    timeoutSeconds,
     exclude,
     language: core.getInput("language").trim() || "en",
     model: core.getInput("model").trim() || "gemini-3.5-flash",

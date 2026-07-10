@@ -84,41 +84,82 @@ export async function generateNote(
     apiKey: string;
     model: string;
     language: string;
+    timeoutSeconds?: number;
     fetchImpl?: typeof fetch;
+    sleepImpl?: (milliseconds: number) => Promise<void>;
   },
 ): Promise<GeneratedNote> {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const response = await fetchImpl(
-    "https://generativelanguage.googleapis.com/v1beta/interactions",
-    {
-      method: "POST",
-      headers: {
-        "x-goog-api-key": options.apiKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: options.model,
-        input: `You write trustworthy pull request documentation from repository evidence. Return only the requested structured result.\n\n${buildPrompt(context, options.language)}`,
-        response_format: {
-          type: "text",
-          mime_type: "application/json",
-          schema: NOTE_SCHEMA,
-        },
-      }),
-      signal: AbortSignal.timeout(60_000),
-    },
-  );
+  const sleepImpl =
+    options.sleepImpl ??
+    ((milliseconds: number) =>
+      new Promise<void>((resolve) => setTimeout(resolve, milliseconds)));
+  const timeoutSeconds = options.timeoutSeconds ?? 120;
+  const maxAttempts = 2;
+  let result: GeminiInteractionResult | undefined;
 
-  const result = (await response.json()) as GeminiInteractionResult;
-  if (!response.ok) {
-    throw new Error(
-      `Gemini request failed (${response.status}): ${result.error?.message ?? "unknown error"}`,
-    );
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await fetchImpl(
+        "https://generativelanguage.googleapis.com/v1beta/interactions",
+        {
+          method: "POST",
+          headers: {
+            "x-goog-api-key": options.apiKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: options.model,
+            input: `You write trustworthy pull request documentation from repository evidence. Return only the requested structured result.\n\n${buildPrompt(context, options.language)}`,
+            response_format: {
+              type: "text",
+              mime_type: "application/json",
+              schema: NOTE_SCHEMA,
+            },
+            generation_config: { thinking_level: "low" },
+            store: false,
+          }),
+          signal: AbortSignal.timeout(timeoutSeconds * 1000),
+        },
+      );
+
+      result = (await response.json()) as GeminiInteractionResult;
+      if (response.ok) break;
+
+      const transient = [429, 500, 502, 503, 504].includes(response.status);
+      if (!transient || attempt === maxAttempts) {
+        throw new Error(
+          `Gemini request failed (${response.status}) on attempt ${attempt} of ${maxAttempts}: ${result.error?.message ?? "unknown error"}`,
+        );
+      }
+    } catch (error) {
+      const timedOut =
+        error instanceof Error &&
+        (error.name === "TimeoutError" ||
+          error.name === "AbortError" ||
+          /timeout|timed out|aborted/i.test(error.message));
+      if (
+        error instanceof Error &&
+        error.message.startsWith("Gemini request failed")
+      ) {
+        throw error;
+      }
+      if (attempt === maxAttempts) {
+        if (timedOut) {
+          throw new Error(
+            `Gemini request timed out after ${timeoutSeconds} seconds on attempt ${attempt} of ${maxAttempts}. Consider reducing max-diff-characters or increasing timeout-seconds.`,
+          );
+        }
+        throw error;
+      }
+    }
+
+    await sleepImpl(1000 * attempt);
   }
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(responseText(result));
+    parsed = JSON.parse(responseText(result ?? {}));
   } catch (error) {
     if (error instanceof SyntaxError) {
       throw new Error("Gemini returned malformed JSON.");
