@@ -2,9 +2,9 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { collectContext } from "./collect-context.js";
 import { readConfig } from "./config.js";
-import { generateNote } from "./generate-note.js";
+import { generateFallbackNote, generateNote } from "./generate-note.js";
 import { GitHubClient } from "./github.js";
-import type { PullRequestInfo } from "./types.js";
+import type { GeneratedNote, PullRequestInfo } from "./types.js";
 import { decideUpdate, eligibleFields } from "./update-pr.js";
 
 function eventPullRequest(): PullRequestInfo | null {
@@ -55,7 +55,23 @@ export async function run(): Promise<void> {
       `Collected ${context.commits.length} commits, ${context.files.length} included files, and ${context.diffExcerpts.reduce((sum, excerpt) => sum + excerpt.patch.length, 0)} diff characters.`,
     );
 
-    const note = await generateNote(context, config);
+    let note: GeneratedNote;
+    if (!config.apiKey) {
+      core.warning(
+        "No Gemini API key was provided. Generating the pull request note from commit history.",
+      );
+      note = generateFallbackNote(context);
+    } else {
+      try {
+        note = await generateNote(context, config);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        core.warning(
+          `Gemini generation was unavailable (${message}). Falling back to commit-history generation.`,
+        );
+        note = generateFallbackNote(context);
+      }
+    }
     const decision = decideUpdate(pullRequest, note, config);
     if (!decision.titleUpdated && !decision.bodyUpdated) {
       core.info(

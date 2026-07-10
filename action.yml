@@ -11,8 +11,8 @@ inputs:
     description: GitHub token used to read and update the pull request.
     required: true
   gemini-api-key:
-    description: Gemini API key used to generate the pull request note.
-    required: true
+    description: Optional Gemini API key. When omitted or unavailable, PRNote uses commit-history fallback generation.
+    required: false
   update-title:
     description: Whether PRNote may generate or update the pull request title.
     required: false
