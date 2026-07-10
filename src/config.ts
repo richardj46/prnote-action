@@ -36,7 +36,7 @@ function positiveIntegerInput(name: string, fallback: number): number {
 
 export function readConfig(): ActionConfig {
   const githubToken = core.getInput("github-token", { required: true });
-  const apiKey = core.getInput("api-key", { required: true });
+  const apiKey = core.getInput("gemini-api-key", { required: true });
   core.setSecret(githubToken);
   core.setSecret(apiKey);
 
@@ -55,6 +55,6 @@ export function readConfig(): ActionConfig {
     maxDiffCharacters: positiveIntegerInput("max-diff-characters", 20_000),
     exclude,
     language: core.getInput("language").trim() || "en",
-    model: core.getInput("model").trim() || "gpt-5.4-mini",
+    model: core.getInput("model").trim() || "gemini-3.5-flash",
   };
 }

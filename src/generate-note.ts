@@ -1,10 +1,7 @@
 import type { GeneratedNote, GenerationContext } from "./types.js";
 
-interface ResponsesApiResult {
+interface GeminiInteractionResult {
   output_text?: string;
-  output?: Array<{
-    content?: Array<{ type?: string; text?: string }>;
-  }>;
   error?: { message?: string };
 }
 
@@ -21,14 +18,9 @@ const NOTE_SCHEMA = {
   },
 } as const;
 
-function responseText(response: ResponsesApiResult): string {
+function responseText(response: GeminiInteractionResult): string {
   if (response.output_text) return response.output_text;
-  for (const output of response.output ?? []) {
-    for (const content of output.content ?? []) {
-      if (content.type === "output_text" && content.text) return content.text;
-    }
-  }
-  throw new Error("The generation provider returned no text output.");
+  throw new Error("Gemini returned no text output.");
 }
 
 export function validateGeneratedNote(value: unknown): GeneratedNote {
@@ -96,39 +88,31 @@ export async function generateNote(
   },
 ): Promise<GeneratedNote> {
   const fetchImpl = options.fetchImpl ?? fetch;
-  const response = await fetchImpl("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${options.apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: options.model,
-      input: [
-        {
-          role: "developer",
-          content:
-            "You write trustworthy pull request documentation from repository evidence. Return only the requested structured result.",
-        },
-        { role: "user", content: buildPrompt(context, options.language) },
-      ],
-      text: {
-        format: {
-          type: "json_schema",
-          name: "pull_request_note",
-          strict: true,
+  const response = await fetchImpl(
+    "https://generativelanguage.googleapis.com/v1beta/interactions",
+    {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": options.apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: options.model,
+        input: `You write trustworthy pull request documentation from repository evidence. Return only the requested structured result.\n\n${buildPrompt(context, options.language)}`,
+        response_format: {
+          type: "text",
+          mime_type: "application/json",
           schema: NOTE_SCHEMA,
         },
-      },
-      max_output_tokens: 1200,
-    }),
-    signal: AbortSignal.timeout(60_000),
-  });
+      }),
+      signal: AbortSignal.timeout(60_000),
+    },
+  );
 
-  const result = (await response.json()) as ResponsesApiResult;
+  const result = (await response.json()) as GeminiInteractionResult;
   if (!response.ok) {
     throw new Error(
-      `Generation provider request failed (${response.status}): ${result.error?.message ?? "unknown error"}`,
+      `Gemini request failed (${response.status}): ${result.error?.message ?? "unknown error"}`,
     );
   }
 
@@ -137,7 +121,7 @@ export async function generateNote(
     parsed = JSON.parse(responseText(result));
   } catch (error) {
     if (error instanceof SyntaxError) {
-      throw new Error("The generation provider returned malformed JSON.");
+      throw new Error("Gemini returned malformed JSON.");
     }
     throw error;
   }

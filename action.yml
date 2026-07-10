@@ -10,8 +10,8 @@ inputs:
   github-token:
     description: GitHub token used to read and update the pull request.
     required: true
-  api-key:
-    description: OpenAI API key used to generate the pull request note.
+  gemini-api-key:
+    description: Gemini API key used to generate the pull request note.
     required: true
   update-title:
     description: Whether PRNote may generate or update the pull request title.
@@ -42,9 +42,9 @@ inputs:
     required: false
     default: "en"
   model:
-    description: OpenAI model used for generation.
+    description: Gemini model used for generation.
     required: false
-    default: "gpt-5.4-mini"
+    default: "gemini-3.5-flash"
 
 outputs:
   title-updated:
