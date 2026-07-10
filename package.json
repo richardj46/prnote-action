@@ -1,0 +1,31 @@
+{
+  "name": "prnote-action",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Generate clear pull request titles and descriptions from commits and code changes.",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "ncc build src/index.ts -o dist --minify --source-map",
+    "check": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^9.1.1",
+    "minimatch": "^10.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@vercel/ncc": "^0.38.3",
+    "@vitest/coverage-v8": "^4.1.10",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.10"
+  }
+}

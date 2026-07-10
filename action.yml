@@ -1,0 +1,57 @@
+name: PRNote
+description: Generate clear pull request titles and descriptions from commits and code changes.
+author: PRNote
+
+branding:
+  icon: edit-3
+  color: blue
+
+inputs:
+  github-token:
+    description: GitHub token used to read and update the pull request.
+    required: true
+  api-key:
+    description: OpenAI API key used to generate the pull request note.
+    required: true
+  update-title:
+    description: Whether PRNote may generate or update the pull request title.
+    required: false
+    default: "true"
+  update-body:
+    description: Whether PRNote may generate or update the pull request body.
+    required: false
+    default: "true"
+  overwrite-title:
+    description: Whether PRNote may overwrite an existing meaningful title.
+    required: false
+    default: "false"
+  overwrite-body:
+    description: Whether PRNote may overwrite an existing meaningful body.
+    required: false
+    default: "false"
+  max-diff-characters:
+    description: Maximum number of diff characters included in generation context.
+    required: false
+    default: "20000"
+  exclude:
+    description: Comma-separated glob patterns excluded from diff context.
+    required: false
+    default: "package-lock.json,yarn.lock,pnpm-lock.yaml,*.min.js,*.map,dist/**,build/**,vendor/**,coverage/**,generated/**,.next/**,target/**"
+  language:
+    description: Language used for the generated title and description.
+    required: false
+    default: "en"
+  model:
+    description: OpenAI model used for generation.
+    required: false
+    default: "gpt-5.4-mini"
+
+outputs:
+  title-updated:
+    description: Whether PRNote updated the pull request title.
+  body-updated:
+    description: Whether PRNote updated the pull request body.
+
+runs:
+  using: node20
+  main: dist/index.js
