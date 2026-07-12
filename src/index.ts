@@ -3,6 +3,7 @@ import * as github from "@actions/github";
 import { collectContext } from "./collect-context.js";
 import { readConfig } from "./config.js";
 import {
+  applyPullRequestTitleConvention,
   attachCommitMessages,
   generateFallbackNote,
   generateNote,
@@ -82,7 +83,12 @@ export async function run(): Promise<void> {
         note = generateFallbackNote(context);
       }
     }
-    note = attachCommitMessages(note, context.commits);
+    note = applyPullRequestTitleConvention(
+      attachCommitMessages(note, context.commits),
+      pullRequest.headBranch,
+      pullRequest.number,
+      context.commits,
+    );
     const decision = decideUpdate(pullRequest, note, config);
     let titleUpdated = false;
     let bodyUpdated = false;

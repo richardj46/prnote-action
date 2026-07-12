@@ -213,6 +213,37 @@ export function attachCommitMessages(
   return { ...note, commitMessages };
 }
 
+function truncateTitle(title: string): string {
+  if (title.length <= 120) return title;
+  const shortened = title.slice(0, 117);
+  const wordBoundary = shortened.lastIndexOf(" ");
+  return `${shortened.slice(0, wordBoundary >= 80 ? wordBoundary : 117).trimEnd()}...`;
+}
+
+export function applyPullRequestTitleConvention(
+  note: GeneratedNote,
+  headBranch: string,
+  pullRequestNumber: number,
+  commits: string[],
+): GeneratedNote {
+  if (commits.length === 0) return note;
+  if (commits.length > 1) {
+    return {
+      ...note,
+      title: truncateTitle(`${headBranch}: pull request #${pullRequestNumber}`),
+    };
+  }
+
+  const subject = (commits[0]?.split(/\r?\n/, 1)[0] ?? "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!subject) return note;
+  return {
+    ...note,
+    title: truncateTitle(`${headBranch}: ${subject}`),
+  };
+}
+
 export async function generateNote(
   context: GenerationContext,
   options: {
