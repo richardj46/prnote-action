@@ -54,7 +54,7 @@ export function readConfig(): ActionConfig {
     apiKey,
     updateTitle: booleanInput("update-title", true),
     updateBody: booleanInput("update-body", true),
-    comment: booleanInput("comment", true),
+    comment: booleanInput("comment", false),
     overwriteTitle: booleanInput("overwrite-title", true),
     overwriteBody: booleanInput("overwrite-body", true),
     maxDiffCharacters: positiveIntegerInput("max-diff-characters", 20_000),

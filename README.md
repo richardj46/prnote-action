@@ -36,7 +36,7 @@ Add `GEMINI_API_KEY` as a repository or organization Actions secret to enable AI
 
 By default, PRNote writes its canonical pull-request title and commit-message description to the PR, replacing existing title/body content. This guarantees that GitHub's editable merge form can use the PRNote values. Set `overwrite-title: "false"` or `overwrite-body: "false"` to restore preservation of meaningful human-written content.
 
-PRNote writes one managed summary comment in the pull request conversation by default, even when the existing title and body are preserved. Set `comment: "false"` to disable it. When commenting is disabled and neither field is eligible for an update, PRNote stops before collecting repository context or calling Gemini.
+PRNote does not write a pull request conversation comment by default. It updates only the PR title and body. A managed summary comment can be enabled explicitly with `comment: "true"`. When commenting is disabled and neither field is eligible for an update, PRNote stops before collecting repository context or calling Gemini.
 
 Generation and GitHub API failures are non-blocking. The action emits a warning and reports the affected output as `false`.
 
@@ -48,7 +48,7 @@ Generation and GitHub API failures are non-blocking. The action emits a warning 
 | `gemini-api-key`      | optional              | Gemini API key. When absent or unavailable, commit-history generation is used.                                   |
 | `update-title`        | `true`                | Allow title generation.                                                                                          |
 | `update-body`         | `true`                | Allow body generation.                                                                                           |
-| `comment`             | `true`                | Create or update one managed PR conversation comment.                                                            |
+| `comment`             | `false`               | Optionally create or update one managed PR conversation comment.                                                 |
 | `overwrite-title`     | `true`                | Replace the existing title with the canonical pull-request title.                                                |
 | `overwrite-body`      | `true`                | Replace the existing body with the commit-message merge description.                                             |
 | `max-diff-characters` | `20000`               | Maximum selected patch characters sent for generation; use `0` to send no patches.                               |

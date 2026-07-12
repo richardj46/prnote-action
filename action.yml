@@ -22,9 +22,9 @@ inputs:
     required: false
     default: "true"
   comment:
-    description: Whether PRNote writes or updates a summary comment in the pull request conversation.
+    description: Whether PRNote writes or updates an optional summary comment in the pull request conversation.
     required: false
-    default: "true"
+    default: "false"
   overwrite-title:
     description: Whether PRNote overwrites an existing title with its canonical merge-request title.
     required: false
