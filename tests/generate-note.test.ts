@@ -98,7 +98,7 @@ describe("generated note validation", () => {
       "fix: reject expired tokens",
     ]);
     expect(renderNote(note)).toContain(
-      "## Commit Messages\n\n- feat: add sign-in — Support magic links\n- fix: reject expired tokens",
+      "## Commit Messages\n\n - feat: add sign-in — Support magic links\n - fix: reject expired tokens",
     );
   });
 });

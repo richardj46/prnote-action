@@ -309,13 +309,20 @@ function section(heading: string, items: string[]): string | null {
   return `## ${heading}\n\n${items.map((item) => `- ${item}`).join("\n")}`;
 }
 
+function commitMessagesSection(messages: string[]): string | null {
+  if (messages.length === 0) return null;
+  return `## Commit Messages\n\n${messages
+    .map((message) => ` - ${message}`)
+    .join("\n")}`;
+}
+
 export function renderNote(note: GeneratedNote): string {
   return [
     `## Summary\n\n${note.summary}`,
     section("Changes", note.changes),
     section("Testing", note.testing),
     section("Notes", note.notes),
-    section("Commit Messages", note.commitMessages ?? []),
+    commitMessagesSection(note.commitMessages ?? []),
   ]
     .filter((value): value is string => value !== null)
     .join("\n\n");
