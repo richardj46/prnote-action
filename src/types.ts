@@ -61,6 +61,7 @@ export interface GeneratedNote {
   changes: string[];
   testing: string[];
   notes: string[];
+  commitMessages?: string[];
 }
 
 export interface UpdateDecision {

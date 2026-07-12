@@ -88,6 +88,8 @@ Configure this once in the target repository:
 
 After checks pass, GitHub pre-fills the merge commit title and description from the PRNote-updated PR. The user can review or edit both fields before clicking Merge. PRNote does not merge automatically and needs only `contents: read` plus `pull-requests: write` permissions.
 
+The generated description ends with a **Commit Messages** section built directly from the source branch. PRNote preserves GitHub's commit order, normalizes each commit subject and body onto one line, and places each commit message on its own list line. This section therefore carries into the editable merge-commit description when the repository uses the pull request title and description as its default message.
+
 GitHub does not expose a per-pull-request API for independently setting the editable merge-dialog defaults. The supported path is: PRNote updates the PR title/body, then the repository's default commit-message setting copies those fields into the merge form.
 
 Gemini uses low thinking for this focused summarization task and does not store Interactions API objects (`store: false`). If a large pull request still times out, reduce `max-diff-characters` or increase `timeout-seconds`.

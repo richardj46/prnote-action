@@ -2,7 +2,11 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { collectContext } from "./collect-context.js";
 import { readConfig } from "./config.js";
-import { generateFallbackNote, generateNote } from "./generate-note.js";
+import {
+  attachCommitMessages,
+  generateFallbackNote,
+  generateNote,
+} from "./generate-note.js";
 import { GitHubClient } from "./github.js";
 import type { GeneratedNote, PullRequestInfo } from "./types.js";
 import {
@@ -78,6 +82,7 @@ export async function run(): Promise<void> {
         note = generateFallbackNote(context);
       }
     }
+    note = attachCommitMessages(note, context.commits);
     const decision = decideUpdate(pullRequest, note, config);
     let titleUpdated = false;
     let bodyUpdated = false;
