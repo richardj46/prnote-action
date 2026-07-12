@@ -26,13 +26,13 @@ inputs:
     required: false
     default: "true"
   overwrite-title:
-    description: Whether PRNote may overwrite an existing meaningful title.
+    description: Whether PRNote overwrites an existing title with its canonical merge-request title.
     required: false
-    default: "false"
+    default: "true"
   overwrite-body:
-    description: Whether PRNote may overwrite an existing meaningful body.
+    description: Whether PRNote overwrites an existing body with the commit-message merge description.
     required: false
-    default: "false"
+    default: "true"
   max-diff-characters:
     description: Maximum number of diff characters included in generation context.
     required: false
