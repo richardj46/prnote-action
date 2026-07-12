@@ -63,6 +63,8 @@ The action exposes `title-updated`, `body-updated`, and `comment-written` output
 
 The managed comment is identified by an invisible marker, so rerunning PRNote updates the existing bot comment instead of adding duplicates. PRNote uses GitHub's pull request issue-comment endpoint and does not create commit comments.
 
+In the managed PR comment, the **Changes** section is a bullet list of the source branch's commit messages in GitHub commit order. The separate **Commit Messages** section remains part of the PR description used for merge-message defaults, but is omitted from the comment to avoid duplication.
+
 ### Merge commit title and description
 
 PRNote writes the generated title and description to the pull request. GitHub can then copy them into the editable merge dialog when a user merges the PR after checks pass.
@@ -113,6 +115,14 @@ with:
 Overwrite mode is explicit because it can replace carefully written content.
 
 ## Generated format
+
+PRNote uses a deterministic title convention:
+
+- One source-branch commit: `<source branch>: <commit subject>`
+- Two or more source-branch commits: `<source branch>: pull request #<PR number>`
+- No available commits: preserve the otherwise generated title
+
+Titles are limited to 120 characters. Existing title overwrite protections still apply unless `overwrite-title: "true"` is configured.
 
 PRNote asks the model for schema-validated structured output and renders only populated sections:
 

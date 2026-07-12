@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  applyPullRequestTitleConvention,
   attachCommitMessages,
   buildPrompt,
   generateFallbackNote,
@@ -166,6 +167,47 @@ describe("commit-history fallback", () => {
     expect(note.testing).toEqual([
       "Testing details were not found in the commit history or changed files.",
     ]);
+  });
+});
+
+describe("pull request title convention", () => {
+  const note = {
+    title: "Generated title",
+    summary: "Summary",
+    changes: [],
+    testing: [],
+    notes: [],
+  };
+
+  it("uses the branch and commit subject for a one-commit pull request", () => {
+    expect(
+      applyPullRequestTitleConvention(note, "feature/auth", 42, [
+        "feat: add passwordless sign-in\n\nSupport magic links",
+      ]).title,
+    ).toBe("feature/auth: feat: add passwordless sign-in");
+  });
+
+  it("uses the branch and PR number for a multi-commit pull request", () => {
+    expect(
+      applyPullRequestTitleConvention(note, "feature/auth", 42, [
+        "Add sign-in",
+        "Add tests",
+      ]).title,
+    ).toBe("feature/auth: pull request #42");
+  });
+
+  it("keeps the generated title when no commits are available", () => {
+    expect(
+      applyPullRequestTitleConvention(note, "feature/auth", 42, []).title,
+    ).toBe("Generated title");
+  });
+
+  it("keeps a single-commit title within 120 characters", () => {
+    expect(
+      applyPullRequestTitleConvention(note, "feature/auth", 42, [
+        `Add ${"validation ".repeat(30)}`,
+      ]).title.length,
+    ).toBeLessThanOrEqual(120);
   });
 });
 

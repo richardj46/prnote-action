@@ -150,4 +150,21 @@ describe("decideUpdate", () => {
       "does not merge the pull request or modify commits",
     );
   });
+
+  it("uses source branch commit messages as the comment Changes bullets", () => {
+    const comment = renderPullRequestComment({
+      ...note,
+      changes: ["Model-generated change"],
+      commitMessages: [
+        "feat: add passwordless sign-in",
+        "test: cover expired links",
+      ],
+    });
+
+    expect(comment).toContain(
+      "## Changes\n\n- feat: add passwordless sign-in\n- test: cover expired links",
+    );
+    expect(comment).not.toContain("Model-generated change");
+    expect(comment).not.toContain("## Commit Messages");
+  });
 });
