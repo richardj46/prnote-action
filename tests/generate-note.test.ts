@@ -5,6 +5,7 @@ import {
   buildPrompt,
   generateFallbackNote,
   generateNote,
+  renderMergeRequestDescription,
   renderNote,
   validateGeneratedNote,
 } from "../src/generate-note.js";
@@ -179,35 +180,47 @@ describe("pull request title convention", () => {
     notes: [],
   };
 
-  it("uses the branch and commit subject for a one-commit pull request", () => {
+  it("uses the branch and merge request number for one commit", () => {
     expect(
-      applyPullRequestTitleConvention(note, "feature/auth", 42, [
-        "feat: add passwordless sign-in\n\nSupport magic links",
-      ]).title,
-    ).toBe("feature/auth: feat: add passwordless sign-in");
+      applyPullRequestTitleConvention(note, "feature/auth", 42).title,
+    ).toBe("feature/auth: merge request #42");
   });
 
-  it("uses the branch and PR number for a multi-commit pull request", () => {
+  it("uses the same convention for multiple commits", () => {
     expect(
-      applyPullRequestTitleConvention(note, "feature/auth", 42, [
-        "Add sign-in",
-        "Add tests",
-      ]).title,
-    ).toBe("feature/auth: pull request #42");
+      applyPullRequestTitleConvention(note, "feature/auth", 42).title,
+    ).toBe("feature/auth: merge request #42");
   });
 
-  it("keeps the generated title when no commits are available", () => {
+  it("uses the convention when no commits are available", () => {
     expect(
-      applyPullRequestTitleConvention(note, "feature/auth", 42, []).title,
-    ).toBe("Generated title");
+      applyPullRequestTitleConvention(note, "feature/auth", 42).title,
+    ).toBe("feature/auth: merge request #42");
   });
 
-  it("keeps a single-commit title within 120 characters", () => {
+  it("keeps a long branch title within 120 characters", () => {
     expect(
-      applyPullRequestTitleConvention(note, "feature/auth", 42, [
-        `Add ${"validation ".repeat(30)}`,
-      ]).title.length,
+      applyPullRequestTitleConvention(
+        note,
+        `feature/${"validation-".repeat(30)}`,
+        42,
+      ).title.length,
     ).toBeLessThanOrEqual(120);
+  });
+});
+
+describe("merge request description", () => {
+  it("contains only prefixed source-branch commit messages", () => {
+    expect(
+      renderMergeRequestDescription({
+        title: "feature/auth: merge request #42",
+        summary: "Model summary",
+        changes: ["Model change"],
+        testing: ["Model testing"],
+        notes: ["Model note"],
+        commitMessages: ["Add authentication", "Add authentication tests"],
+      }),
+    ).toBe(" - Add authentication\n - Add authentication tests");
   });
 });
 

@@ -87,7 +87,6 @@ export async function run(): Promise<void> {
       attachCommitMessages(note, context.commits),
       pullRequest.headBranch,
       pullRequest.number,
-      context.commits,
     );
     const decision = decideUpdate(pullRequest, note, config);
     let titleUpdated = false;

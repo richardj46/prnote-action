@@ -224,23 +224,10 @@ export function applyPullRequestTitleConvention(
   note: GeneratedNote,
   headBranch: string,
   pullRequestNumber: number,
-  commits: string[],
 ): GeneratedNote {
-  if (commits.length === 0) return note;
-  if (commits.length > 1) {
-    return {
-      ...note,
-      title: truncateTitle(`${headBranch}: pull request #${pullRequestNumber}`),
-    };
-  }
-
-  const subject = (commits[0]?.split(/\r?\n/, 1)[0] ?? "")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!subject) return note;
   return {
     ...note,
-    title: truncateTitle(`${headBranch}: ${subject}`),
+    title: truncateTitle(`${headBranch}: merge request #${pullRequestNumber}`),
   };
 }
 
@@ -345,6 +332,12 @@ function commitMessagesSection(messages: string[]): string | null {
   return `## Commit Messages\n\n${messages
     .map((message) => ` - ${message}`)
     .join("\n")}`;
+}
+
+export function renderMergeRequestDescription(note: GeneratedNote): string {
+  const messages = note.commitMessages ?? [];
+  if (messages.length === 0) return renderNote(note);
+  return messages.map((message) => ` - ${message}`).join("\n");
 }
 
 export function renderNote(note: GeneratedNote): string {
