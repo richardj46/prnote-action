@@ -86,7 +86,6 @@ export async function run(): Promise<void> {
     note = applyPullRequestTitleConvention(
       attachCommitMessages(note, context.commits),
       pullRequest.headBranch,
-      pullRequest.number,
     );
     const decision = decideUpdate(pullRequest, note, config);
     let titleUpdated = false;

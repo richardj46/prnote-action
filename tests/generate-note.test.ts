@@ -180,22 +180,22 @@ describe("pull request title convention", () => {
     notes: [],
   };
 
-  it("uses the branch and pull request number for one commit", () => {
-    expect(
-      applyPullRequestTitleConvention(note, "feature/auth", 42).title,
-    ).toBe("feature/auth: pull request #42");
+  it("uses the branch and pull request label for one commit", () => {
+    expect(applyPullRequestTitleConvention(note, "feature/auth").title).toBe(
+      "feature/auth: pull request",
+    );
   });
 
   it("uses the same convention for multiple commits", () => {
-    expect(
-      applyPullRequestTitleConvention(note, "feature/auth", 42).title,
-    ).toBe("feature/auth: pull request #42");
+    expect(applyPullRequestTitleConvention(note, "feature/auth").title).toBe(
+      "feature/auth: pull request",
+    );
   });
 
   it("uses the convention when no commits are available", () => {
-    expect(
-      applyPullRequestTitleConvention(note, "feature/auth", 42).title,
-    ).toBe("feature/auth: pull request #42");
+    expect(applyPullRequestTitleConvention(note, "feature/auth").title).toBe(
+      "feature/auth: pull request",
+    );
   });
 
   it("keeps a long branch title within 120 characters", () => {
@@ -203,7 +203,6 @@ describe("pull request title convention", () => {
       applyPullRequestTitleConvention(
         note,
         `feature/${"validation-".repeat(30)}`,
-        42,
       ).title.length,
     ).toBeLessThanOrEqual(120);
   });
@@ -213,7 +212,7 @@ describe("pull request commit-message description", () => {
   it("contains only prefixed source-branch commit messages", () => {
     expect(
       renderMergeRequestDescription({
-        title: "feature/auth: pull request #42",
+        title: "feature/auth: pull request",
         summary: "Model summary",
         changes: ["Model change"],
         testing: ["Model testing"],
@@ -226,7 +225,7 @@ describe("pull request commit-message description", () => {
   it("never falls back to rich content when commit history is empty", () => {
     expect(
       renderMergeRequestDescription({
-        title: "feature/auth: pull request #42",
+        title: "feature/auth: pull request",
         summary: "Model summary",
         changes: ["Model change"],
         testing: ["Model testing"],

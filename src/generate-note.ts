@@ -223,11 +223,10 @@ function truncateTitle(title: string): string {
 export function applyPullRequestTitleConvention(
   note: GeneratedNote,
   headBranch: string,
-  pullRequestNumber: number,
 ): GeneratedNote {
   return {
     ...note,
-    title: truncateTitle(`${headBranch}: pull request #${pullRequestNumber}`),
+    title: truncateTitle(`${headBranch}: pull request`),
   };
 }
 

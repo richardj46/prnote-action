@@ -88,7 +88,7 @@ Configure this once in the target repository:
 2. Enable **Allow merge commits**.
 3. In its default-message dropdown, select **Pull request title and description**. This corresponds to merge commit title = **PR title** and merge commit message = **PR body**.
 
-After checks pass, refresh or reopen the merge form. GitHub should pre-fill the merge commit title from the PR title and the extended description from the PR body. If the extended description contains `<source branch>: pull request #...`, the repository is configured to use **PR title** as the merge message; change it to **Pull request title and description**. The user can review or edit both fields before clicking Merge. PRNote does not merge automatically and needs only `contents: read` plus `pull-requests: write` permissions.
+After checks pass, refresh or reopen the merge form. GitHub should pre-fill the merge commit title from the PR title and the extended description from the PR body. If the extended description contains `<source branch>: pull request`, the repository is configured to use **PR title** as the merge message; change it to **Pull request title and description**. The user can review or edit both fields before clicking Merge. PRNote does not merge automatically and needs only `contents: read` plus `pull-requests: write` permissions.
 
 The generated description ends with a **Commit Messages** section built directly from the source branch. PRNote preserves GitHub's commit order, normalizes each commit subject and body onto one line, and places each commit message on its own list line. This section therefore carries into the editable merge-commit description when the repository uses the pull request title and description as its default message.
 
@@ -118,7 +118,7 @@ Overwrite mode is explicit because it can replace carefully written content.
 
 PRNote uses one deterministic pull-request title convention:
 
-`<source branch>: pull request #<PR number>`
+`<source branch>: pull request`
 
 The PR body used as GitHub's editable merge extended description contains only the source-branch commit messages in commit order:
 
