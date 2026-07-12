@@ -68,6 +68,7 @@ describe("decideUpdate", () => {
     changes: ["Add a route"],
     testing: [],
     notes: [],
+    commitMessages: ["feat: add authentication"],
   };
 
   it("updates weak content", () => {
@@ -80,7 +81,7 @@ describe("decideUpdate", () => {
       }),
     ).toMatchObject({
       title: "Add authentication",
-      body: expect.stringContaining("## Summary"),
+      body: " - feat: add authentication",
       titleUpdated: true,
       bodyUpdated: true,
     });

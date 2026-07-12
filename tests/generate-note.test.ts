@@ -180,22 +180,22 @@ describe("pull request title convention", () => {
     notes: [],
   };
 
-  it("uses the branch and merge request number for one commit", () => {
+  it("uses the branch and pull request number for one commit", () => {
     expect(
       applyPullRequestTitleConvention(note, "feature/auth", 42).title,
-    ).toBe("feature/auth: merge request #42");
+    ).toBe("feature/auth: pull request #42");
   });
 
   it("uses the same convention for multiple commits", () => {
     expect(
       applyPullRequestTitleConvention(note, "feature/auth", 42).title,
-    ).toBe("feature/auth: merge request #42");
+    ).toBe("feature/auth: pull request #42");
   });
 
   it("uses the convention when no commits are available", () => {
     expect(
       applyPullRequestTitleConvention(note, "feature/auth", 42).title,
-    ).toBe("feature/auth: merge request #42");
+    ).toBe("feature/auth: pull request #42");
   });
 
   it("keeps a long branch title within 120 characters", () => {
@@ -209,11 +209,11 @@ describe("pull request title convention", () => {
   });
 });
 
-describe("merge request description", () => {
+describe("pull request commit-message description", () => {
   it("contains only prefixed source-branch commit messages", () => {
     expect(
       renderMergeRequestDescription({
-        title: "feature/auth: merge request #42",
+        title: "feature/auth: pull request #42",
         summary: "Model summary",
         changes: ["Model change"],
         testing: ["Model testing"],
@@ -221,6 +221,19 @@ describe("merge request description", () => {
         commitMessages: ["Add authentication", "Add authentication tests"],
       }),
     ).toBe(" - Add authentication\n - Add authentication tests");
+  });
+
+  it("never falls back to rich content when commit history is empty", () => {
+    expect(
+      renderMergeRequestDescription({
+        title: "feature/auth: pull request #42",
+        summary: "Model summary",
+        changes: ["Model change"],
+        testing: ["Model testing"],
+        notes: ["Model note"],
+        commitMessages: [],
+      }),
+    ).toBe(" - No source branch commit messages found");
   });
 });
 

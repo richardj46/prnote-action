@@ -34,7 +34,7 @@ Add `GEMINI_API_KEY` as a repository or organization Actions secret to enable AI
 
 ## Safe defaults
 
-By default, PRNote writes its canonical merge-request title and commit-message description to the PR, replacing existing title/body content. This guarantees that GitHub's editable merge form can use the PRNote values. Set `overwrite-title: "false"` or `overwrite-body: "false"` to restore preservation of meaningful human-written content.
+By default, PRNote writes its canonical pull-request title and commit-message description to the PR, replacing existing title/body content. This guarantees that GitHub's editable merge form can use the PRNote values. Set `overwrite-title: "false"` or `overwrite-body: "false"` to restore preservation of meaningful human-written content.
 
 PRNote writes one managed summary comment in the pull request conversation by default, even when the existing title and body are preserved. Set `comment: "false"` to disable it. When commenting is disabled and neither field is eligible for an update, PRNote stops before collecting repository context or calling Gemini.
 
@@ -49,7 +49,7 @@ Generation and GitHub API failures are non-blocking. The action emits a warning 
 | `update-title`        | `true`                | Allow title generation.                                                                                          |
 | `update-body`         | `true`                | Allow body generation.                                                                                           |
 | `comment`             | `true`                | Create or update one managed PR conversation comment.                                                            |
-| `overwrite-title`     | `true`                | Replace the existing title with the canonical merge-request title.                                               |
+| `overwrite-title`     | `true`                | Replace the existing title with the canonical pull-request title.                                                |
 | `overwrite-body`      | `true`                | Replace the existing body with the commit-message merge description.                                             |
 | `max-diff-characters` | `20000`               | Maximum selected patch characters sent for generation; use `0` to send no patches.                               |
 | `timeout-seconds`     | `120`                 | Maximum duration of each Gemini attempt; transient failures are retried once.                                    |
@@ -88,7 +88,7 @@ Configure this once in the target repository:
 2. Enable **Allow merge commits**.
 3. In its default-message dropdown, select **Pull request title and description**. This corresponds to merge commit title = **PR title** and merge commit message = **PR body**.
 
-After checks pass, refresh or reopen the merge form. GitHub should pre-fill the merge commit title from the PR title and the extended description from the PR body. If the extended description contains `<source branch>: merge request #...`, the repository is configured to use **PR title** as the merge message; change it to **Pull request title and description**. The user can review or edit both fields before clicking Merge. PRNote does not merge automatically and needs only `contents: read` plus `pull-requests: write` permissions.
+After checks pass, refresh or reopen the merge form. GitHub should pre-fill the merge commit title from the PR title and the extended description from the PR body. If the extended description contains `<source branch>: pull request #...`, the repository is configured to use **PR title** as the merge message; change it to **Pull request title and description**. The user can review or edit both fields before clicking Merge. PRNote does not merge automatically and needs only `contents: read` plus `pull-requests: write` permissions.
 
 The generated description ends with a **Commit Messages** section built directly from the source branch. PRNote preserves GitHub's commit order, normalizes each commit subject and body onto one line, and places each commit message on its own list line. This section therefore carries into the editable merge-commit description when the repository uses the pull request title and description as its default message.
 
@@ -116,9 +116,9 @@ Overwrite mode is explicit because it can replace carefully written content.
 
 ## Generated format
 
-PRNote uses one deterministic merge-request title convention:
+PRNote uses one deterministic pull-request title convention:
 
-`<source branch>: merge request #<PR number>`
+`<source branch>: pull request #<PR number>`
 
 The PR body used as GitHub's editable merge extended description contains only the source-branch commit messages in commit order:
 
