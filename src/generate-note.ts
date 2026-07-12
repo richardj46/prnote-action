@@ -227,7 +227,7 @@ export function applyPullRequestTitleConvention(
 ): GeneratedNote {
   return {
     ...note,
-    title: truncateTitle(`${headBranch}: merge request #${pullRequestNumber}`),
+    title: truncateTitle(`${headBranch}: pull request #${pullRequestNumber}`),
   };
 }
 
@@ -336,7 +336,9 @@ function commitMessagesSection(messages: string[]): string | null {
 
 export function renderMergeRequestDescription(note: GeneratedNote): string {
   const messages = note.commitMessages ?? [];
-  if (messages.length === 0) return renderNote(note);
+  if (messages.length === 0) {
+    return " - No source branch commit messages found";
+  }
   return messages.map((message) => ` - ${message}`).join("\n");
 }
 
