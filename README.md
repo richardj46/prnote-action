@@ -116,11 +116,16 @@ Overwrite mode is explicit because it can replace carefully written content.
 
 ## Generated format
 
-PRNote uses a deterministic title convention:
+PRNote uses one deterministic merge-request title convention:
 
-- One source-branch commit: `<source branch>: <commit subject>`
-- Two or more source-branch commits: `<source branch>: pull request #<PR number>`
-- No available commits: preserve the otherwise generated title
+`<source branch>: merge request #<PR number>`
+
+The PR body used as GitHub's editable merge extended description contains only the source-branch commit messages in commit order:
+
+```text
+ - first commit message
+ - second commit message
+```
 
 Titles are limited to 120 characters. Existing title overwrite protections still apply unless `overwrite-title: "true"` is configured.
 

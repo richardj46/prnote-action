@@ -4,7 +4,7 @@ import type {
   PullRequestInfo,
   UpdateDecision,
 } from "./types.js";
-import { renderNote } from "./generate-note.js";
+import { renderMergeRequestDescription, renderNote } from "./generate-note.js";
 
 const TITLE_PLACEHOLDERS = new Set([
   "changes",
@@ -131,7 +131,7 @@ export function decideUpdate(
 
   return {
     ...(eligible.title ? { title: note.title } : {}),
-    ...(eligible.body ? { body: renderNote(note) } : {}),
+    ...(eligible.body ? { body: renderMergeRequestDescription(note) } : {}),
     titleUpdated: eligible.title,
     bodyUpdated: eligible.body,
   };
