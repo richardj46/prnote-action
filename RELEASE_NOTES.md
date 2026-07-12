@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Generate PR title and description
-        uses: prnote/prnote-action@v0.1.0
+        uses: richardj46/prnote-action@v0.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
