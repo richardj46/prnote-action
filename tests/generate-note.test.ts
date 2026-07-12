@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  attachCommitMessages,
   buildPrompt,
   generateFallbackNote,
   generateNote,
@@ -74,6 +75,30 @@ describe("generated note validation", () => {
       }),
     ).toBe(
       "## Summary\n\nAdds sign-in.\n\n## Changes\n\n- Add a sign-in route\n\n## Notes\n\n- Requires EMAIL_FROM",
+    );
+  });
+
+  it("renders source-branch commit messages in order, one per line", () => {
+    const note = attachCommitMessages(
+      {
+        title: "Add authentication",
+        summary: "Adds sign-in.",
+        changes: [],
+        testing: [],
+        notes: [],
+      },
+      [
+        "feat: add sign-in\n\nSupport magic links",
+        "fix: reject expired tokens",
+      ],
+    );
+
+    expect(note.commitMessages).toEqual([
+      "feat: add sign-in — Support magic links",
+      "fix: reject expired tokens",
+    ]);
+    expect(renderNote(note)).toContain(
+      "## Commit Messages\n\n- feat: add sign-in — Support magic links\n- fix: reject expired tokens",
     );
   });
 });

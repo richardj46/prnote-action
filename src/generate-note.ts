@@ -194,6 +194,25 @@ export function generateFallbackNote(
   };
 }
 
+export function attachCommitMessages(
+  note: GeneratedNote,
+  commits: string[],
+): GeneratedNote {
+  const commitMessages = commits
+    .map((message) =>
+      message
+        .replace(/\r\n/g, "\n")
+        .split(/\n+/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .join(" — ")
+        .replace(/\s+/g, " ")
+        .trim(),
+    )
+    .filter(Boolean);
+  return { ...note, commitMessages };
+}
+
 export async function generateNote(
   context: GenerationContext,
   options: {
@@ -296,6 +315,7 @@ export function renderNote(note: GeneratedNote): string {
     section("Changes", note.changes),
     section("Testing", note.testing),
     section("Notes", note.notes),
+    section("Commit Messages", note.commitMessages ?? []),
   ]
     .filter((value): value is string => value !== null)
     .join("\n\n");
