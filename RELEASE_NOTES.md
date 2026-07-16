@@ -1,4 +1,4 @@
-# PRNote v0.1.0
+# PRNote v0.1.1
 
 Released: 12 July 2026
 
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Generate PR title and description
-        uses: richardj46/prnote-action@v0.1.0
+        uses: richardj46/prnote-action@v0.1.1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           gemini-api-key: ${{ secrets.GEMINI_API_KEY }}
