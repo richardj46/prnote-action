@@ -1,6 +1,6 @@
-name: PRNote
+name: PRNote Action
 description: Generate clear pull request titles and descriptions from commits and code changes.
-author: PRNote
+author: richardj46
 
 branding:
   icon: edit-3
