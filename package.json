@@ -1,6 +1,6 @@
 {
   "name": "prnote-action",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Generate clear pull request titles and descriptions from commits and code changes.",
   "main": "dist/index.js",
